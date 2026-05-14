@@ -1,0 +1,17 @@
+// firestore.rules
+// Pegá estas reglas en Firebase Console → Firestore → Reglas → Publicar
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /groups/{groupId} {
+      allow read, write: if true;
+      match /messages/{msgId}  { allow read, write: if true; }
+      match /lists/{listId} {
+        allow read, write: if true;
+        match /items/{itemId}  { allow read, write: if true; }
+      }
+      match /members/{memberId} { allow read, write: if true; }
+    }
+  }
+}

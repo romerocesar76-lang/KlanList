@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "KlanList",
+    "slug": "klanlist",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": ["**/*"],
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFFFF",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#FFFFFF",
+      "resizeMode": "cover"
+    },
+    "android": {
+      "package": "com.klanlist.app",
+      "softwareKeyboardLayoutMode": "pan",
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#FFFFFF"
+      },
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ff1acbad-1e8e-4917-be77-7ec155aae7e3"
+      }
+    },
+    "owner": "asdelavi"
+  }
+}
