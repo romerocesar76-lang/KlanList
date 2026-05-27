@@ -141,6 +141,7 @@ export default function App() {
                 groupCode={session.groupCode}
                 groupName={session.groupName}
                 onUsernameChange={name => setSession(s => ({ ...s, username: name }))}
+                onGroupChange={group => setSession(s => ({ ...s, ...group }))}
                 onLeave={() => {
                   AsyncStorage.multiRemove(['kl_username', 'kl_groupCode', 'kl_groupName']);
                   setSession(null);

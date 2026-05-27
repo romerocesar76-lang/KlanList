@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../firebase/config';
+import { saveGroup } from '../storage/groups';
 import { colors, radius } from '../theme';
 
 // Generates a code like "KLAN-8F3T"
@@ -56,6 +57,7 @@ export default function OnboardingScreen({ onDone }) {
         ['kl_groupCode', code],
         ['kl_groupName', groupName.trim()],
       ]);
+      await saveGroup({ name: groupName.trim(), code });
       onDone({ username: username.trim(), groupCode: code, groupName: groupName.trim() });
     } catch (e) {
       console.error('handleCreate error', e);
@@ -91,6 +93,7 @@ export default function OnboardingScreen({ onDone }) {
         ['kl_groupCode', code],
         ['kl_groupName', groupData.name],
       ]);
+      await saveGroup({ name: groupData.name, code });
       onDone({ username: username.trim(), groupCode: code, groupName: groupData.name });
     } catch (e) {
       console.error('handleJoin error', e);
