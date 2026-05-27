@@ -8,6 +8,17 @@
     "assetBundlePatterns": ["**/*"],
     "userInterfaceStyle": "light",
     "backgroundColor": "#FFFFFF",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#FFFFFF"
+        }
+      ]
+    ],
+    "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "backgroundColor": "#FFFFFF",
@@ -16,6 +27,7 @@
     "android": {
       "package": "com.klanlist.app",
       "softwareKeyboardLayoutMode": "pan",
+      "icon": "./assets/icon.png",
       "splash": {
         "image": "./assets/splash.png",
         "resizeMode": "cover",

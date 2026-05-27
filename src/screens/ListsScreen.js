@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { db } from '../firebase/config';
 import { colors, radius, shadow } from '../theme';
 
-export default function ListsScreen({ username, groupCode }) {
+export default function ListsScreen({ username, groupCode, groupName }) {
   const [lists, setLists]             = useState([]);
   const [currentListId, setCurrentListId] = useState(null);
   const [items, setItems]             = useState([]);
@@ -123,7 +123,7 @@ export default function ListsScreen({ username, groupCode }) {
     if (doneCount === 0) return;
     Alert.alert(
       'Limpiar tachados',
-      `¿Eliminar los ${doneCount} ítem${doneCount > 1 ? 's' : ''} ya tachados?`,
+      `¿Eliminar los ${doneCount} ítem${doneCount > 1 ? 's' : ''} tachados?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -176,7 +176,9 @@ export default function ListsScreen({ username, groupCode }) {
 
       {/* ── Top bar ── */}
       <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Listas</Text>
+        <Text style={styles.topBarTitle} numberOfLines={1}>
+          {groupName || 'Listas'}
+        </Text>
         <TouchableOpacity
           style={styles.newListBtn}
           onPress={() => setShowNewListModal(true)}
@@ -218,7 +220,7 @@ export default function ListsScreen({ username, groupCode }) {
                   <Ionicons
                     name="close-circle"
                     size={17}
-                    color={active ? colors.white : colors.text3}
+                    color={active ? colors.accent : colors.text3}
                   />
                 </TouchableOpacity>
               </View>
@@ -228,6 +230,7 @@ export default function ListsScreen({ username, groupCode }) {
       )}
 
       {/* ── Items ── */}
+      <View style={styles.content}>
       {loadingLists || loadingItems ? (
         <View style={styles.loader}>
           <ActivityIndicator color={colors.accent} size="large" />
@@ -247,7 +250,7 @@ export default function ListsScreen({ username, groupCode }) {
           </Text>
         </View>
       ) : (
-        <>
+        <View style={styles.itemsBody}>
           {/* Clear done items shortcut */}
           {doneCount > 0 && (
             <TouchableOpacity style={styles.clearDoneBtn} onPress={askClearDone} activeOpacity={0.7}>
@@ -258,13 +261,16 @@ export default function ListsScreen({ username, groupCode }) {
             </TouchableOpacity>
           )}
           <FlatList
+            key={currentListId}
+            style={styles.itemsFlatList}
             data={items}
             keyExtractor={i => i.id}
             renderItem={renderItem}
             contentContainerStyle={styles.itemsList}
           />
-        </>
+        </View>
       )}
+      </View>
 
       {/* ── Add item footer ── */}
       {currentListId && (
@@ -332,33 +338,36 @@ export default function ListsScreen({ username, groupCode }) {
 
 const styles = StyleSheet.create({
   root:            { flex: 1, backgroundColor: colors.bgSoft },
+  content:         { flex: 1, minHeight: 0 },
   loader:          { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty:           { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   emptyIcon:       { fontSize: 44 },
   emptyText:       { fontSize: 15, color: colors.text2, textAlign: 'center', lineHeight: 22 },
 
   // Top bar
-  topBar:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  topBar:          { flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.bgSoft, borderBottomWidth: 1, borderBottomColor: colors.border },
   topBarTitle:     { fontSize: 17, fontWeight: '700', color: colors.text },
   newListBtn:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.accentSoft, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.full },
   newListBtnText:  { fontSize: 13, fontWeight: '700', color: colors.accentDark },
 
   // Tabs
-  tabsScroll:      { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, maxHeight: 54 },
-  tabsContent:     { flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingVertical: 10, alignItems: 'center' },
+  tabsScroll:      { flexGrow: 0, flexShrink: 0, height: 54, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  tabsContent:     { height: 54, flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingVertical: 10, alignItems: 'center' },
   tabGroup:        { flexDirection: 'row', alignItems: 'center', gap: 0 },
   tabPill:         { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.full, borderWidth: 1, borderColor: colors.borderMd, backgroundColor: colors.bg },
   tabPillActive:   { backgroundColor: colors.accent, borderColor: colors.accent },
   tabText:         { fontSize: 13, fontWeight: '600', color: colors.text2 },
   tabTextActive:   { color: colors.white },
-  tabDelBtn:       { paddingLeft: 4, paddingRight: 6, paddingVertical: 7 },
-  tabDelBtnActive: {},
+  tabDelBtn:       { width: 30, height: 36, alignItems: 'center', justifyContent: 'center' },
+  tabDelBtnActive: { color: colors.blackSoft }, 
 
   // Clear done
   clearDoneBtn:    { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-end', marginRight: 14, marginTop: 10, marginBottom: 2, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   clearDoneText:   { fontSize: 12, color: colors.text2, fontWeight: '600' },
 
   // Items
+  itemsBody:       { flex: 1 },
+  itemsFlatList:   { flex: 1 },
   itemsList:       { padding: 12, gap: 8, paddingBottom: 16 },
   itemCard:        { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 13, borderWidth: 1, borderColor: colors.border, ...shadow },
   itemCardDone:    { opacity: 0.5 },
@@ -371,7 +380,7 @@ const styles = StyleSheet.create({
   delItemBtn:      { padding: 6, borderRadius: radius.sm, backgroundColor: colors.redSoft },
 
   // Footer
-  footer:          { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  footer:          { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
   footerInput:     { flex: 1, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.borderMd, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.text },
   addBtn:          { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
 

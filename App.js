@@ -1,6 +1,6 @@
 // App.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import { Image, View, StyleSheet, StatusBar } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,9 +13,6 @@ import ChatScreen       from './src/screens/ChatScreen';
 import ListsScreen      from './src/screens/ListsScreen';
 import GroupScreen      from './src/screens/GroupScreen';
 import { colors }       from './src/theme';
-
-// Keep splash visible while we check AsyncStorage
-SplashScreen.preventAutoHideAsync();
 
 const Tab = createBottomTabNavigator();
 
@@ -35,29 +32,59 @@ const NavTheme = {
 export default function App() {
   const [session, setSession] = useState(null);   // { username, groupCode, groupName }
   const [loading, setLoading] = useState(true);
+  const [showIntro, setShowIntro] = useState(true);
 
   useEffect(() => {
-    AsyncStorage.multiGet(['kl_username', 'kl_groupCode', 'kl_groupName'])
-      .then(pairs => {
+    async function initializeApp() {
+      try {
+        await SplashScreen.preventAutoHideAsync();
+      } catch (error) {
+        console.warn('SplashScreen preventAutoHideAsync failed:', error);
+      }
+
+      try {
+        const pairs = await AsyncStorage.multiGet(['kl_username', 'kl_groupCode', 'kl_groupName']);
         const [username, groupCode, groupName] = pairs.map(p => p[1]);
         if (username && groupCode && groupName) {
           setSession({ username, groupCode, groupName });
         }
-      })
-      .finally(() => {
+      } catch (error) {
+        console.warn('AsyncStorage load failed:', error);
+      } finally {
         setLoading(false);
-        SplashScreen.hideAsync();
-      });
+        try {
+          await SplashScreen.hideAsync();
+        } catch (error) {
+          console.warn('SplashScreen hideAsync failed:', error);
+        }
+      }
+    }
+
+    initializeApp();
   }, []);
 
-  if (loading) {
-    return null; // SplashScreen will be visible from app.json
+  useEffect(() => {
+    const timer = setTimeout(() => setShowIntro(false), 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading || showIntro) {
+    return (
+      <View style={styles.splashRoot}>
+        <StatusBar hidden />
+        <Image
+          source={require('./assets/splash.png')}
+          style={styles.splashImage}
+          resizeMode="cover"
+        />
+      </View>
+    );
   }
 
   if (!session) {
     return (
       <SafeAreaProvider>
-        <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
+        <StatusBar hidden={false} barStyle="dark-content" backgroundColor={colors.bg} />
         <OnboardingScreen onDone={s => setSession(s)} />
       </SafeAreaProvider>
     );
@@ -65,7 +92,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
+      <StatusBar hidden={false} barStyle="dark-content" backgroundColor={colors.surface} />
       <NavigationContainer theme={NavTheme}>
         <Tab.Navigator
           screenOptions={({ route }) => ({
@@ -98,7 +125,13 @@ export default function App() {
           </Tab.Screen>
 
           <Tab.Screen name="Listas" options={{ title: 'Listas' }}>
-            {() => <ListsScreen username={session.username} groupCode={session.groupCode} />}
+            {() => (
+              <ListsScreen
+                username={session.username}
+                groupCode={session.groupCode}
+                groupName={session.groupName}
+              />
+            )}
           </Tab.Screen>
 
           <Tab.Screen name="Grupo" options={{ title: session.groupName }}>
@@ -120,3 +153,14 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  splashRoot: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  splashImage: {
+    width: '100%',
+    height: '100%',
+  },
+});
