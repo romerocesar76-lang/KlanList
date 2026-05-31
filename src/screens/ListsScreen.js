@@ -20,6 +20,7 @@ export default function ListsScreen({ username, groupCode, groupName }) {
   const [loadingLists, setLoadingLists] = useState(true);
   const [loadingItems, setLoadingItems] = useState(false);
   const [newItemText, setNewItemText] = useState('');
+  const [searchMode, setSearchMode] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [showNewListModal, setShowNewListModal] = useState(false);
 
@@ -57,6 +58,11 @@ export default function ListsScreen({ username, groupCode, groupName }) {
     return unsub;
   }, [currentListId, groupCode]);
 
+  useEffect(() => {
+    setNewItemText('');
+    setSearchMode(false);
+  }, [currentListId]);
+
   // ── Create list ───────────────────────────────────
   async function createList() {
     const name = newListName.trim();
@@ -93,6 +99,7 @@ export default function ListsScreen({ username, groupCode, groupName }) {
 
   // ── Add item ──────────────────────────────────────
   async function addItem() {
+    if (searchMode) return;
     const text = newItemText.trim();
     if (!text || !currentListId) return;
     setNewItemText('');
@@ -118,6 +125,18 @@ export default function ListsScreen({ username, groupCode, groupName }) {
   }
 
   // ── Clear checked items ───────────────────────────
+  function normalizeSearchText(text) {
+    return (text || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function toggleSearchMode() {
+    setNewItemText('');
+    setSearchMode(prev => !prev);
+  }
+
   function askClearDone() {
     const doneCount = items.filter(i => i.done).length;
     if (doneCount === 0) return;
@@ -170,6 +189,10 @@ export default function ListsScreen({ username, groupCode, groupName }) {
 
   const activeList  = lists.find(l => l.id === currentListId);
   const doneCount   = items.filter(i => i.done).length;
+  const searchText  = normalizeSearchText(newItemText.trim());
+  const visibleItems = searchMode && searchText
+    ? items.filter(i => normalizeSearchText(i.text).includes(searchText))
+    : items;
 
   return (
     <View style={styles.root}>
@@ -263,10 +286,18 @@ export default function ListsScreen({ username, groupCode, groupName }) {
           <FlatList
             key={currentListId}
             style={styles.itemsFlatList}
-            data={items}
+            data={visibleItems}
             keyExtractor={i => i.id}
             renderItem={renderItem}
             contentContainerStyle={styles.itemsList}
+            ListEmptyComponent={
+              searchMode && searchText ? (
+                <View style={styles.noResults}>
+                  <Ionicons name="search-outline" size={28} color={colors.text3} />
+                  <Text style={styles.noResultsText}>No hay coincidencias</Text>
+                </View>
+              ) : null
+            }
           />
         </View>
       )}
@@ -275,16 +306,36 @@ export default function ListsScreen({ username, groupCode, groupName }) {
       {/* ── Add item footer ── */}
       {currentListId && (
         <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.searchBtn, searchMode && styles.searchBtnActive]}
+            onPress={toggleSearchMode}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={searchMode ? 'close' : 'search-outline'}
+              size={21}
+              color={searchMode ? colors.white : colors.accent}
+            />
+          </TouchableOpacity>
           <TextInput
             style={styles.footerInput}
             value={newItemText}
             onChangeText={setNewItemText}
-            placeholder={activeList ? `Agregar a "${activeList.name}"...` : 'Agregar ítem...'}
+            placeholder={
+              searchMode
+                ? 'Buscar en la lista...'
+                : activeList ? `Agregar a "${activeList.name}"...` : 'Agregar ítem...'
+            }
             placeholderTextColor={colors.text3}
-            returnKeyType="done"
+            returnKeyType={searchMode ? 'search' : 'done'}
             onSubmitEditing={addItem}
           />
-          <TouchableOpacity style={styles.addBtn} onPress={addItem} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={[styles.addBtn, searchMode && styles.addBtnDisabled]}
+            onPress={addItem}
+            disabled={searchMode}
+            activeOpacity={0.8}
+          >
             <Ionicons name="add" size={24} color={colors.white} />
           </TouchableOpacity>
         </View>
@@ -369,6 +420,8 @@ const styles = StyleSheet.create({
   itemsBody:       { flex: 1 },
   itemsFlatList:   { flex: 1 },
   itemsList:       { padding: 12, gap: 8, paddingBottom: 16 },
+  noResults:       { alignItems: 'center', justifyContent: 'center', paddingVertical: 48, gap: 8 },
+  noResultsText:   { fontSize: 14, fontWeight: '600', color: colors.text3 },
   itemCard:        { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: radius.md, padding: 13, borderWidth: 1, borderColor: colors.border, ...shadow },
   itemCardDone:    { opacity: 0.5 },
   checkCircle:     { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: colors.borderMd, alignItems: 'center', justifyContent: 'center' },
@@ -381,8 +434,11 @@ const styles = StyleSheet.create({
 
   // Footer
   footer:          { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  searchBtn:       { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+  searchBtnActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   footerInput:     { flex: 1, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.borderMd, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.text },
   addBtn:          { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  addBtnDisabled:  { opacity: 0.35 },
 
   // Modal
   backdrop:        { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },

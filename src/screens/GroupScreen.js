@@ -47,6 +47,10 @@ export default function GroupScreen({ username, groupCode, groupName, onUsername
   const [savedGroups, setSavedGroups] = useState([]);
   const [groupActionLoading, setGroupActionLoading] = useState(false);
 
+  // arriba, dentro del componente GroupScreen
+  const appVersion = '1.1.0';
+  const appAuthor = 'Desarrollado por Asdelavi de César Romero';
+
   useEffect(() => {
     const q = query(
       collection(db, 'groups', groupCode, 'members'),
@@ -288,6 +292,20 @@ export default function GroupScreen({ username, groupCode, groupName, onUsername
             </View>
           ))
         }
+      </View>
+
+      {/* ── About card ── */}
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>ACERCA DE KLANLIST</Text>
+        <View style={{ marginTop: 6 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>Versión</Text>
+          <Text style={{ fontSize: 13, color: colors.text2, marginTop: 4 }}>{appVersion}</Text>
+        </View>
+
+        <View style={{ marginTop: 12 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>Desarrollador</Text>
+          <Text style={{ fontSize: 13, color: colors.text2, marginTop: 4 }}>{appAuthor}</Text>
+        </View>
       </View>
 
       {/* ── Edit name modal ── */}
